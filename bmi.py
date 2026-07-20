@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="Myze's Calculator",
     layout="centered"
 )
-st.title("Myze's Calculator")
+st.title("🧮 Myze's Calculator")
 
 # Hide the form's own submit button (Enter key still triggers it)
 st.markdown("""
@@ -105,12 +105,12 @@ def on_button_click(button):
     else:
         add(button)
 
-# Display (on top now)
+# Display (on top)
 with st.form(key="expr_form", clear_on_submit=False):
     st.text_input("Output", key="expression")
     st.form_submit_button("=", use_container_width=True, on_click=calculate)
 
-# Button Layout
+# Button Layout (internal values unchanged — "*" stays "*")
 buttons = [
     ["AC", "⌫", "(", ")", "%"],
     ["sin", "cos", "tan", "√", "π"],
@@ -120,13 +120,50 @@ buttons = [
     ["0", ".", "Ans", "+", "="]
 ]
 
-# Create Buttons (state gets updated via on_click callback now)
-for row in buttons:
+# What gets shown on the button face vs. what gets added to the expression
+display_map = {
+    "*": "×"
+}
+
+# Buttons to style blue (scientific functions)
+sci_keys = []
+equals_key = None
+
+for row_idx, row in enumerate(buttons):
     cols = st.columns(5)
-    for index, button in enumerate(row):
-        cols[index].button(
-            button,
-            use_container_width=True,
-            on_click=on_button_click,
-            args=(button,)
-        )
+    for col_idx, button in enumerate(row):
+        label = display_map.get(button, button)
+        key = f"btn_{row_idx}_{col_idx}"
+
+        if button in ["sin", "cos", "tan", "√", "π", "EXP"]:
+            sci_keys.append(key)
+
+        if button == "=":
+            equals_key = key
+            cols[col_idx].button(
+                label,
+                key=key,
+                use_container_width=True,
+                on_click=on_button_click,
+                args=(button,),
+                type="primary"
+            )
+        else:
+            cols[col_idx].button(
+                label,
+                key=key,
+                use_container_width=True,
+                on_click=on_button_click,
+                args=(button,)
+            )
+
+# Style scientific function buttons blue
+sci_selector = ", ".join([f'.st-key-{k} button' for k in sci_keys])
+st.markdown(f"""
+<style>
+{sci_selector} {{
+    color: #4da6ff !important;
+    border-color: #4da6ff !important;
+}}
+</style>
+""", unsafe_allow_html=True)
